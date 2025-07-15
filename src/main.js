@@ -27,24 +27,149 @@ window.addEventListener("DOMContentLoaded", () => {
   const CounterTargets = gsap.utils.toArray(
     ".counter-container .counter .count h1"
   );
+  const ProgressTargets = gsap.utils.toArray(".loading-progress h1");
+
   const SplitedHeadings = setupSplitedHeading(HeadingTargets);
   const SplitedCounters = setupSplitedHeading(CounterTargets, {
     charsClass: "counter-char",
     linesClass: "counter-line",
     wordsClass: "counter-word",
   });
+  const SplitedProgress = setupSplitedHeading(ProgressTargets, {
+    charsClass: "progress-char",
+    linesClass: "progress-line",
+    wordsClass: "progress-word",
+  });
 
   SplitedCounters.lines[0].classList.add("counter-line-one");
   SplitedCounters.lines[1].classList.add("counter-line-two");
+  gsap.set(SplitedCounters.lines[0].querySelectorAll(".counter-char"), {
+    y: "100%",
+  });
   gsap.set(SplitedCounters.lines[1].querySelectorAll(".counter-char"), {
     y: "100%",
   });
 
   SplitedHeadings.lines[0].classList.add("heading-line-one");
   SplitedHeadings.lines[1].classList.add("heading-line-two");
+  gsap.set(SplitedHeadings.lines[0].querySelectorAll(".heading-char"), {
+    y: "100%",
+  });
   gsap.set(SplitedHeadings.lines[1].querySelectorAll(".heading-char"), {
     y: "100%",
   });
+
+  SplitedProgress.lines[0].classList.add("progress-line-one");
+  SplitedProgress.lines[1].classList.add("progress-line-two");
+  gsap.set(SplitedProgress.lines[1].querySelectorAll(".progress-char"), {
+    y: "100%",
+  });
+
+  function IsPrevsZero(Prog, j) {
+    let IsZeros = true;
+    for (let i = 0; i < j; i++) {
+      if (Number(Prog[i]) !== 0) {
+        IsZeros = false;
+        return IsZeros;
+      }
+    }
+    return IsZeros;
+  }
+
+  let HasLoadingFinished = false;
+  let LoadingUpdates = [];
+  let LoadingUpdateIndex = 0;
+
+  function UpdateLoading() {
+    let Prog = LoadingUpdates[LoadingUpdateIndex].toString().split("");
+    if (Prog.length < 3) {
+      for (let i = 0; i < 3; i++) {
+        if (!Prog[i]) {
+          Prog.unshift("0");
+        }
+      }
+    }
+    Prog = Prog.join("");
+
+    const ProgLineOne = qs(".progress-line-one");
+    const ProgLineTwo = qs(".progress-line-two");
+
+    const ProgLineOneChars = gsap.utils.toArray(
+      ".progress-line-one .progress-char"
+    );
+    const ProgLineTwoChars = gsap.utils.toArray(
+      ".progress-line-two .progress-char"
+    );
+
+    ProgLineTwoChars.forEach((Item, i) => {
+      const Val = Prog[i];
+      Item.innerText = Val;
+      if (Val == "0" && IsPrevsZero(Prog, i) && i < 1) {
+        gsap.set(Item, {
+          opacity: 0,
+        });
+      } else {
+        gsap.set(Item, {
+          opacity: 1,
+        });
+      }
+    });
+
+    const ProgTL = gsap.timeline({
+      onComplete() {
+        ProgLineOne.classList.remove("progress-line-one");
+        ProgLineOne.classList.add("progress-line-two");
+        ProgLineTwo.classList.remove("progress-line-two");
+        ProgLineTwo.classList.add("progress-line-one");
+        
+        gsap.set(ProgLineOneChars, {
+          y: "100%",
+        });
+        LoadingUpdateIndex++;
+        HasLoadingFinished = LoadingUpdateIndex > LoadingUpdates.length ;
+        if (HasLoadingFinished) {
+          const OutTL = gsap.timeline({
+            onComplete:ShowContent
+          })
+          OutTL.to('.progress-line-one .progress-char',{
+            y:'-100%',
+            stagger:.04
+          })
+          OutTL.to('.loading-progress',{
+            display:'none'
+          })
+          OutTL.to('.overlay .line',{
+            width:'70vw'
+          })
+          OutTL.to('.overlay .line',{
+            opacity:0
+          })
+          OutTL.to('.overlay',{
+            opacity:0
+          })
+        }
+        if (LoadingUpdateIndex <= LoadingUpdates.length - 1) {
+          UpdateLoading();
+        }
+      },
+    });
+
+    ProgTL.to(ProgLineOneChars, {
+      y: "-100%",
+      stagger: 0.08,
+      duration: 0.6,
+    });
+    ProgTL.to(
+      ProgLineTwoChars,
+      {
+        y: 0,
+        stagger: 0.08,
+        duration: 0.6,
+      },
+      "<"
+    );
+    return ProgTL;
+  }
 
   function UpdateCurrentBottleNumber(num = 1) {
     if (IsAnimating) return;
@@ -73,9 +198,51 @@ window.addEventListener("DOMContentLoaded", () => {
     MainTL.add([TL1, TL2], "<");
   }
 
-  setInterval(() => {
-    UpdateCurrentBottleNumber(CurrentBottle + 1);
-  }, 1000);
+  let Bottle = null;
+
+  function ShowContent(){
+    gsap.to(SplitedCounters.lines[0].querySelectorAll(".counter-char"), {
+      y:0,
+      stagger:.07,
+      duration:.5
+    });
+    gsap.to(SplitedHeadings.lines[0].querySelectorAll(".heading-char"), {
+      y:0,
+      stagger:.05,
+      duration:.7
+    });
+
+    const BottleTL = gsap.timeline()
+    BottleTL.fromTo(Bottle.position,{
+      y:-1/10,
+    },{
+      y:1/10,
+      repeat:-1,
+      yoyo:true,
+      duration:2,
+      ease:'power1.inOut'
+    },'<')
+    BottleTL.to(Bottle.position,{
+      x:0,
+      duration:1.5,
+      ease:'power3.out'
+    },'<')
+    BottleTL.to(Bottle.rotation,{
+      z:0,
+      duration:2,
+      ease:'back.out'
+    },'<')
+    setInterval(() => {
+      UpdateCurrentBottleNumber(CurrentBottle + 1);
+    }, 2000);
+  }
+
+  function MouseMove(e){
+    const {clientX,clientY} = e;
+    
+  }
+
+
 
   const { PI } = Math;
 
@@ -109,10 +276,33 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   const gui = new GUI();
+  gui.close();
 
-  const GlbLoader = new GLTFLoader();
+  const Manager = new THREE.LoadingManager(
+    // On Load Function
+    () => {
+    },
+    // While Load Function
+    (_, loaded, total) => {
+      let Progress = Math.ceil((loaded / total) * 100);
+      Progress = Math.min(Progress, 100);
+      console.log(Progress);
 
-  let Bottle = null;
+      LoadingUpdates.push(Progress);
+
+      if (LoadingUpdateIndex == 0) {
+        UpdateLoading();
+      } else if (HasLoadingFinished) {
+        LoadingUpdateIndex = LoadingUpdates.length - 1;
+        UpdateLoading();
+      }
+    },
+    // Error While Loading
+    () => {}
+  );
+
+  const GlbLoader = new GLTFLoader(Manager);
+
 
   GlbLoader.load("/Bottle.glb", (glb) => {
     const model = glb.scene;
@@ -120,43 +310,41 @@ window.addEventListener("DOMContentLoaded", () => {
     scene.add(Bottle);
 
     Bottle.scale.setScalar(1.5);
-    Bottle.rotation.x = -0.04;
+    Bottle.position.x = 20.04;
     Bottle.rotation.z = -Math.PI / 6;
+
 
     // Add a folder to organize the GUI
 
     // Traverse to find mesh and its material
     Bottle.traverse((child) => {
       if (child.isMesh && child.material && !!BottleData[child.name]) {
-
         // Default values if not present
-        if(BottleData[child.name]) {
-          child.material.roughness = BottleData[child.name].roughness
-          child.material.metalness = BottleData[child.name].metalness
-          if(BottleData[child.name]?.color){
-            console.log(child.material.color,BottleData[child.name].color)
-            child.material.color.set(BottleData[child.name].color)
+        if (BottleData[child.name]) {
+          child.material.roughness = BottleData[child.name].roughness;
+          child.material.metalness = BottleData[child.name].metalness;
+          if (BottleData[child.name]?.color) {
+            child.material.color.set(BottleData[child.name].color);
           }
         }
 
-        const MeshFolder = gui.addFolder(child.name)
+        const MeshFolder = gui.addFolder(child.name);
 
         // Add GUI controllers
-        MeshFolder
-          .addColor({ color: `#${child.material.color.getHexString()}` }, "color")
+        MeshFolder.addColor(
+          { color: `#${child.material.color.getHexString()}` },
+          "color"
+        )
           .name("Color")
           .onChange((val) => child.material.color.set(val));
 
-        MeshFolder
-          .add(child.material, "metalness", 0, 1)
+        MeshFolder.add(child.material, "metalness", 0, 1)
           .step(0.01)
           .name("Metalness");
-        MeshFolder
-          .add(child.material, "roughness", 0, 1)
+        MeshFolder.add(child.material, "roughness", 0, 1)
           .step(0.01)
           .name("Roughness");
-        MeshFolder
-          .add(child.material, "opacity", 0, 1)
+        MeshFolder.add(child.material, "opacity", 0, 1)
           .step(0.01)
           .name("Opacity")
           .onChange((val) => (child.material.opacity = val));
