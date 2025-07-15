@@ -6,27 +6,63 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
-import { AnimateHeadings, setupSplitedHeading } from "./utils/gsap";
+import { AnimateCounters, AnimateHeadings, setupSplitedHeading } from "./utils/gsap";
 
 gsap.registerPlugin(SplitText);
 
 window.addEventListener("DOMContentLoaded", () => {
 
 
+  let CurrentBottle = 1;
+  let TotalBottle = 4;
+  let IsAnimating = false;
+
+
   const qs = (rut='') => document.querySelector(rut)
 
 
   const HeadingTargets = gsap.utils.toArray('.huge-text h1')
+  const CounterTargets = gsap.utils.toArray('.counter-container .counter .count h1')
   const SplitedHeadings = setupSplitedHeading(HeadingTargets)
+  const SplitedCounters = setupSplitedHeading(CounterTargets,{
+    charsClass:'counter-char',
+    linesClass:'counter-line',
+    wordsClass:'counter-word'
+  })
+
+
+  SplitedCounters.lines[0].classList.add('counter-line-one')
+  SplitedCounters.lines[1].classList.add('counter-line-two')
+  gsap.set(SplitedCounters.lines[1].querySelectorAll('.counter-char'),{
+    y:'100%'
+  })
 
   SplitedHeadings.lines[0].classList.add('heading-line-one')
   SplitedHeadings.lines[1].classList.add('heading-line-two')
   gsap.set(SplitedHeadings.lines[1].querySelectorAll('.heading-char'),{
     y:'100%'
   })
-  AnimateHeadings(qs('.heading-line-one'),qs('.heading-line-two'),() => {
-  AnimateHeadings(qs('.heading-line-one'),qs('.heading-line-two'))
-  })
+  
+  function UpdateCurrentBottleNumber(num=1){
+    if(IsAnimating) return;
+    const MainTL = gsap.timeline({
+      onComplete(){
+        IsAnimating = false
+      }
+    })
+    IsAnimating = true;
+    CurrentBottle = num;
+    CurrentBottle = CurrentBottle % TotalBottle;
+    CurrentBottle = CurrentBottle == 0 ? TotalBottle : CurrentBottle;
+    const TL1 = AnimateHeadings(qs('.heading-line-one'),qs('.heading-line-two'),() => {  })
+    const TL2 = AnimateCounters(qs('.counter-line-one'),qs('.counter-line-two'),()=>{},CurrentBottle,2,CounterTargets)
+    MainTL.add([TL1,TL2],'<')
+  }
+
+  setInterval(() => {
+    UpdateCurrentBottleNumber(CurrentBottle+1)
+  }, 1000);
+
 
 
   const { PI } = Math;
