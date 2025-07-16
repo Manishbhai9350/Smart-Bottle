@@ -8,9 +8,9 @@ export const BottleData = {
     body:{
         variants:[
             {
-                color:'#c4c4c4',
-                metalness:.2,
-                roughness:0,
+                color:'#949494',
+                metalness:0.23,
+                roughness:0.57,
             },
             {
                 color:'#181b67',
@@ -32,7 +32,7 @@ export const BottleData = {
     brand:{
         variants:[
             {
-                color:'#c4c4c4',
+                color:'#000000',
                 metalness:1,
                 roughness:1,
             },
