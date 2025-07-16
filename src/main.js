@@ -320,7 +320,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const GlbLoader = new GLTFLoader(Manager);
 
 
-  GlbLoader.load("/bottle.glb", (glb) => {
+  GlbLoader.load("/Bottle_1.glb", (glb) => {
     const model = glb.scene;
     Bottle = model;
     scene.add(Bottle);
