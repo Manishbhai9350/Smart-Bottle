@@ -199,6 +199,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   let Bottle = null;
+  let HasContentShown = false
 
   function ShowContent(){
     gsap.to(SplitedCounters.lines[0].querySelectorAll(".counter-char"), {
@@ -212,8 +213,12 @@ window.addEventListener("DOMContentLoaded", () => {
       duration:.7
     });
 
-    const BottleTL = gsap.timeline()
-    BottleTL.fromTo(Bottle.position,{
+    const BottleTL = gsap.timeline({
+      onComplete(){
+        HasContentShown = true 
+      }
+    })
+    gsap.fromTo(Bottle.position,{
       y:-1/10,
     },{
       y:1/10,
@@ -228,6 +233,7 @@ window.addEventListener("DOMContentLoaded", () => {
       ease:'power3.out'
     },'<')
     BottleTL.to(Bottle.rotation,{
+      x:.15,
       z:0,
       duration:2,
       ease:'back.out'
@@ -238,8 +244,18 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function MouseMove(e){
+    if(!Bottle || !HasContentShown) return;
     const {clientX,clientY} = e;
-    
+    const NX = (clientX / innerWidth) * 2 - 1;
+    const NY = -((clientY / innerHeight) * 2 - 1);
+    console.log(NX)
+
+    gsap.to(Bottle.rotation,{
+      y:NX * .5,
+      ease:'power3.out',
+      duration:3
+    })
+
   }
 
 
@@ -304,7 +320,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const GlbLoader = new GLTFLoader(Manager);
 
 
-  GlbLoader.load("/Bottle.glb", (glb) => {
+  GlbLoader.load("/bottle.glb", (glb) => {
     const model = glb.scene;
     Bottle = model;
     scene.add(Bottle);
@@ -401,4 +417,5 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   window.addEventListener("resize", resize);
+  window.addEventListener("mousemove", MouseMove);
 });

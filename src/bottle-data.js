@@ -13,5 +13,13 @@ export const BottleData = {
     brand:{
         metalness:1,
         roughness:1
-    }
+    },
+    Handle:{
+        metalness:1,
+        roughness:.67
+    },
+    Bolt:{
+        metalness:1,
+        roughness:.35
+    },
 }
