@@ -17,7 +17,7 @@ import { BottleData } from "./bottle-data";
 gsap.registerPlugin(SplitText);
 
 window.addEventListener("DOMContentLoaded", () => {
-  let CurrentBottle = 1;
+  let CurrentVariant = 1;
   let TotalBottle = 4;
   let IsAnimating = false;
 
@@ -179,7 +179,7 @@ window.addEventListener("DOMContentLoaded", () => {
       },
     });
     IsAnimating = true;
-    CurrentBottle = num;
+    let CurrentBottle = num;
     CurrentBottle = CurrentBottle % TotalBottle;
     CurrentBottle = CurrentBottle == 0 ? TotalBottle : CurrentBottle;
     const TL1 = AnimateHeadings(
@@ -195,10 +195,13 @@ window.addEventListener("DOMContentLoaded", () => {
       2,
       CounterTargets
     );
-    MainTL.add([TL1, TL2], "<");
+    MainTL.add([TL1,TL2],'<');
   }
 
   let Bottle = null;
+  let BottleBody = null;
+  let BottleCap = null;
+  let BottleBrand = null;
   let HasContentShown = false
 
   function ShowContent(){
@@ -234,13 +237,12 @@ window.addEventListener("DOMContentLoaded", () => {
     },'<')
     BottleTL.to(Bottle.rotation,{
       x:.15,
-      z:0,
+      z:-.2,
+      y:.3,
       duration:2,
       ease:'back.out'
     },'<')
-    setInterval(() => {
-      UpdateCurrentBottleNumber(CurrentBottle + 1);
-    }, 2000);
+    // UpdateCurrentBottleNumber(1);
   }
 
   function MouseMove(e){
@@ -248,10 +250,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const {clientX,clientY} = e;
     const NX = (clientX / innerWidth) * 2 - 1;
     const NY = -((clientY / innerHeight) * 2 - 1);
-    console.log(NX)
 
     gsap.to(Bottle.rotation,{
-      y:NX * .5,
+      y:.3 + NX * .5,
       ease:'power3.out',
       duration:3
     })
@@ -292,6 +293,41 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   const gui = new GUI();
+  gui.add({variants:[]},'variants',[1,2,3,4]).setValue(1).name("Bottle Varint").onChange((variant) => {
+    CurrentVariant = variant
+    UpdateCurrentBottleNumber(CurrentVariant)
+    if(!BottleBody || !BottleBrand) return;
+    const BodyVariantData = BottleData['body'].variants[variant - 1] 
+    const BodyColor = new THREE.Color(BodyVariantData.color)
+    const BrandVariantData = BottleData['brand'].variants[variant - 1] 
+    const BrandColor = new THREE.Color(BrandVariantData.color)
+    gsap.to(BottleBody.material,{
+      metalness:BodyVariantData.metalness,
+      roughness:BodyVariantData.roughness,
+      duration:1,
+      ease:'power3.inOut'
+    })
+    gsap.to(BottleBody.material.color,{
+      r:BodyColor.r,
+      g:BodyColor.g,
+      b:BodyColor.b,
+      duration:1,
+      ease:'power3.inOut'
+    })
+    gsap.to(BottleBrand.material,{
+      metalness:BrandVariantData.metalness,
+      roughness:BrandVariantData.roughness,
+      duration:1,
+      ease:'power3.inOut'
+    })
+    gsap.to(BottleBrand.material.color,{
+      r:BrandColor.r,
+      g:BrandColor.g,
+      b:BrandColor.b,
+      duration:1,
+      ease:'power3.inOut'
+    })
+  })
   gui.close();
 
   const Manager = new THREE.LoadingManager(
@@ -302,7 +338,6 @@ window.addEventListener("DOMContentLoaded", () => {
     (_, loaded, total) => {
       let Progress = Math.ceil((loaded / total) * 100);
       Progress = Math.min(Progress, 100);
-      console.log(Progress);
 
       LoadingUpdates.push(Progress);
 
@@ -330,21 +365,46 @@ window.addEventListener("DOMContentLoaded", () => {
     Bottle.rotation.z = -Math.PI / 6;
 
 
+
     // Add a folder to organize the GUI
 
     // Traverse to find mesh and its material
     Bottle.traverse((child) => {
       if (child.isMesh && child.material && !!BottleData[child.name]) {
         // Default values if not present
+        console.log(child.name)
+        const MeshFolder = gui.addFolder(child.name);
+        MeshFolder.close()
+
+        if(child.name == 'body') {
+          BottleBody = child;
+          MeshFolder.add(BottleBody.position,'x').min(-5).max(5)
+          MeshFolder.add(BottleBody.position,'y').min(-5).max(5)
+          MeshFolder.add(BottleBody.position,'z').min(-5).max(5)
+        }
+        if(child.name == 'cap') {
+          BottleCap = child
+          MeshFolder.add(BottleCap.position,'x').min(-5).max(5)
+          MeshFolder.add(BottleCap.position,'y').min(-5).max(5)
+          MeshFolder.add(BottleCap.position,'z').min(-5).max(5)
+        }
+        if(child.name == 'brand') {
+          BottleBrand = child
+          MeshFolder.add(BottleBrand.position,'x').min(-5).max(5)
+          MeshFolder.add(BottleBrand.position,'y').min(-5).max(5)
+          MeshFolder.add(BottleBrand.position,'z').min(-5).max(5)
+        }
         if (BottleData[child.name]) {
-          child.material.roughness = BottleData[child.name].roughness;
-          child.material.metalness = BottleData[child.name].metalness;
-          if (BottleData[child.name]?.color) {
-            child.material.color.set(BottleData[child.name].color);
+          if(child.name == 'body' || child.name == 'brand'){
+            child.material.roughness = BottleData[child.name].variants[0].roughness;
+            child.material.metalness = BottleData[child.name].variants[0].metalness;
+            child.material.color.set(BottleData[child.name].variants[0].color);
+          } else {
+            child.material.roughness = BottleData[child.name].roughness;
+            child.material.metalness = BottleData[child.name].metalness;
           }
         }
 
-        const MeshFolder = gui.addFolder(child.name);
 
         // Add GUI controllers
         MeshFolder.addColor(
@@ -367,7 +427,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
         MeshFolder.add(child.material, "transparent").name("Transparent");
 
-        MeshFolder.open();
       }
     });
   });
@@ -377,7 +436,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Lightning Setup
 
-  const FrontLight = new THREE.DirectionalLight(0xffffff, 5);
+  const FrontLight = new THREE.DirectionalLight(0xffffff, 4);
   FrontLight.position.set(0, 0, 2);
 
   const Backlight = new THREE.DirectionalLight(0xffffff, 2);

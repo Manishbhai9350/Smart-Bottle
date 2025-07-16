@@ -3,16 +3,55 @@
 export const BottleData = {
     cap:{
         metalness:.4,
-        roughness:.55
+        roughness:.55,
     },
     body:{
-        color:'#c4c4c4',
-        metalness:.2,
-        roughness:0
+        variants:[
+            {
+                color:'#c4c4c4',
+                metalness:.2,
+                roughness:0,
+            },
+            {
+                color:'#181b67',
+                metalness:.65,
+                roughness:.6,
+            },
+            {
+                color:'#7d2121',
+                metalness:.6,
+                roughness:.6,
+            },
+            {
+                color:'#217d5e',
+                metalness:.5,
+                roughness:.65,
+            },
+        ]
     },
     brand:{
-        metalness:1,
-        roughness:1
+        variants:[
+            {
+                color:'#c4c4c4',
+                metalness:1,
+                roughness:1,
+            },
+            {
+                color:'#ffffff',
+                metalness:1,
+                roughness:.45,
+            },
+            {
+                color:'#ffffff',
+                metalness:1,
+                roughness:.45,
+            },
+            {
+                color:'#ffffff',
+                metalness:1,
+                roughness:.45,
+            },
+        ]
     },
     Handle:{
         metalness:1,

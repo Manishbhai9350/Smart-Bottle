@@ -14,7 +14,7 @@ export function setupSplitedHeading(targets = [],config=DefaultConfig){
 }
 
 export function AnimateHeadings(HeadingLineOne,HeadingLineTwo,onComlete=()=>{}){
-    const TL = gsap.timeline({delay:1,onComplete:() => {
+    const TL = gsap.timeline({onComplete:() => {
         HeadingLineOne.classList.remove('heading-line-one')
         HeadingLineOne.classList.add('heading-line-two')
         HeadingLineTwo.classList.remove('heading-line-two')
@@ -57,7 +57,7 @@ export function AnimateCounters(CounterLineOne,CounterLineTwo,onComlete=()=>{},v
         Item.innerText = TextValue[i]
     })
 
-    const TL = gsap.timeline({delay:1,onComplete:() => {
+    const TL = gsap.timeline({onComplete:() => {
         CounterLineOne.classList.remove('counter-line-one')
         CounterLineOne.classList.add('counter-line-two')
         CounterLineTwo.classList.remove('counter-line-two')
@@ -73,7 +73,7 @@ export function AnimateCounters(CounterLineOne,CounterLineTwo,onComlete=()=>{},v
         y:'-100%',
         stagger:.07,
         duration:1,
-    })
+    },'<')
     TL.to(CounterLineTwo.querySelectorAll('.counter-char'),{
         y:0,
         stagger:.07,
