@@ -17,7 +17,7 @@ import { BottleData } from "./bottle-data";
 gsap.registerPlugin(SplitText);
 
 window.addEventListener("DOMContentLoaded", () => {
-  let CurrentVariant = 1;
+  let CurrentVariant = 4;
   let TotalBottle = 4;
   let IsAnimating = false;
 
@@ -85,7 +85,25 @@ window.addEventListener("DOMContentLoaded", () => {
   let BottleBody = null;
   let BottleCap = null;
   let BottleBrand = null;
+  let BottleHandle = null;
+  let BottleBolt = null;
   let HasContentShown = false;
+
+  function HideBottle(){
+    if(!BottleCap || !BottleBody || !BottleBrand || !BottleHandle.material || !BottleBolt.material) return;
+    gsap.to([BottleCap.material,BottleBody.material,BottleBrand.material,BottleHandle.material,BottleBolt.material],{
+      opacity:0,
+      transparent:true,
+      duration:.3
+    })
+  }
+  function ShowBottle(){
+    if(!BottleCap || !BottleBody || !BottleBrand) return;
+    gsap.to([BottleCap.material,BottleBody.material,BottleBrand.material,BottleHandle.material,BottleBolt.material],{
+      opacity:1,
+      duration:.3
+    })
+  }
 
   function ShowContent() {
     const BottleTL = gsap.timeline({
@@ -125,6 +143,9 @@ window.addEventListener("DOMContentLoaded", () => {
       },
       "<"
     );
+    BottleTL.to('.selectors',{
+      opacity:1
+    })
     UpdateCurrentBottleNumber(1);
   }
 
@@ -176,50 +197,111 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   const gui = new GUI();
-  gui
-    .add({ variants: [] }, "variants", [1, 2, 3, 4])
-    .setValue(1)
-    .name("Bottle Varint")
-    .onChange((variant) => {
+  gui.add({hide:false},'hide').onChange(l => {
+    if(l){
+      HideBottle()
+    } else {
+      ShowBottle()
+    }
+  })
+
+  const Indicators = []
+
+  function UpdateIndicator(){
+    Indicators.map(In => In.classList.remove('selected'))
+    Indicators[CurrentVariant-1].classList.add('selected')
+  }
+  
+  const IndicatorNames = ['grey','white','silver','black']
+  const SelectorsContainer = qs('.selectors')
+  SelectorsContainer.innerHTML = ''
+  BottleData.body.variants.map((variant,i) => {
+    const Selector = document.createElement('div')
+    Selector.classList.add('selector')
+
+    Indicators.push(Selector)
+
+    const ColorIndicator = document.createElement('div')
+    ColorIndicator.classList.add('color-indicator')
+
+    const Text = document.createElement('div')
+    Text.classList.add('text')
+
+    Text.textContent = IndicatorNames[i]
+
+    gsap.set(ColorIndicator,{
+      background:variant.color
+    })
+
+    Selector.appendChild(ColorIndicator)
+    Selector.appendChild(Text)
+    SelectorsContainer.appendChild(Selector)
+
+    Selector.addEventListener('click',() => OnSelect(i+1))
+  })
+  UpdateIndicator()
+
+  function OnSelect(variant){
+      if(IsAnimating) return;
       CurrentVariant = variant;
+      UpdateIndicator()
       UpdateCurrentBottleNumber(CurrentVariant);
       if (!BottleBody || !BottleBrand) return;
       const BodyVariantData = BottleData["body"].variants[variant - 1];
       const BodyColor = new THREE.Color(BodyVariantData.color);
       const BrandVariantData = BottleData["brand"].variants[variant - 1];
       const BrandColor = new THREE.Color(BrandVariantData.color);
-      gsap.to(BottleBody.material, {
+
+      const BottleTL = gsap.timeline({
+        // delay:.5,
+        onStart(){
+          // HideBottle()
+        },
+        onComplete(){
+          // ShowBottle()
+        }
+      })
+
+      BottleTL.to(BottleBody.material, {
         metalness: BodyVariantData.metalness,
         roughness: BodyVariantData.roughness,
         duration: 1,
         ease: "power3.inOut",
-      });
-      gsap.to(BottleBody.material.color, {
+      },'<');
+      BottleTL.to(BottleBody.material.color, {
         r: BodyColor.r,
         g: BodyColor.g,
         b: BodyColor.b,
         duration: 1,
         ease: "power3.inOut",
-      });
-      gsap.to(BottleBrand.material, {
+      },'<');
+      BottleTL.to(BottleBrand.material, {
         metalness: BrandVariantData.metalness,
         roughness: BrandVariantData.roughness,
         duration: 1,
         ease: "power3.inOut",
-      });
-      gsap.to(BottleBrand.material.color, {
+      },'<');
+      BottleTL.to(BottleBrand.material.color, {
         r: BrandColor.r,
         g: BrandColor.g,
         b: BrandColor.b,
         duration: 1,
         ease: "power3.inOut",
-      });
-    });
+      },'<');
+  }
+
+  gui
+    .add({ variants: [] }, "variants", [1, 2, 3, 4])
+    .setValue(1)
+    .name("Bottle Varint")
+    .onChange((variant) => OnSelect(variant));
   gui.close();
+  gui.hide()
 
   const Manager = new THREE.LoadingManager(
     // On Load Function
     () => {
+      OnSelect(CurrentVariant)
       const ShowTL = gsap.timeline({
         onComplete: () => {
           ShowContent()
@@ -270,27 +352,35 @@ window.addEventListener("DOMContentLoaded", () => {
     Bottle.traverse((child) => {
       if (child.isMesh && child.material && !!BottleData[child.name]) {
         // Default values if not present
-        console.log(child.name);
+        console.log(child.name)
         const MeshFolder = gui.addFolder(child.name);
         MeshFolder.close();
 
         if (child.name == "body") {
           BottleBody = child;
+          BottleBody.material.onBeforeCompile  = shader => {
+          }
           MeshFolder.add(BottleBody.position, "x").min(-5).max(5);
           MeshFolder.add(BottleBody.position, "y").min(-5).max(5);
           MeshFolder.add(BottleBody.position, "z").min(-5).max(5);
         }
-        if (child.name == "cap") {
+        else if (child.name == "cap") {
           BottleCap = child;
           MeshFolder.add(BottleCap.position, "x").min(-5).max(5);
           MeshFolder.add(BottleCap.position, "y").min(-5).max(5);
           MeshFolder.add(BottleCap.position, "z").min(-5).max(5);
         }
-        if (child.name == "brand") {
+        else if (child.name == "brand") {
           BottleBrand = child;
           MeshFolder.add(BottleBrand.position, "x").min(-5).max(5);
           MeshFolder.add(BottleBrand.position, "y").min(-5).max(5);
           MeshFolder.add(BottleBrand.position, "z").min(-5).max(5);
+        }
+        else if(child.name == 'Handle'){
+          BottleHandle = child
+        }
+        else if(child.name == 'Bolt'){
+          BottleBolt = child
         }
         if (BottleData[child.name]) {
           if (child.name == "body" || child.name == "brand") {

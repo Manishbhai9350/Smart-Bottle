@@ -18,9 +18,9 @@ export const BottleData = {
                 roughness:.9,
             },
             {
-                color:'#747474',
-                metalness:.6,
-                roughness:.8,
+                color:'#949494',
+                metalness:1,
+                roughness:.55,
             },
             {
                 color:'#000000',
@@ -42,7 +42,7 @@ export const BottleData = {
                 roughness:.45,
             },
             {
-                color:'#ffffff',
+                color:'#000000',
                 metalness:1,
                 roughness:.45,
             },

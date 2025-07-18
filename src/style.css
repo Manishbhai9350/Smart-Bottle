@@ -64,6 +64,54 @@ canvas {
   }
 }
 
+.selectors {
+  opacity: 0;
+  z-index: 1000;
+  width: 170px;
+  height: 200px;
+  position: absolute;
+  bottom: 50px;
+  right: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  .selector {
+    padding: 5px;
+    border-radius:50px;
+    width: 100%;
+    border: 1px solid white;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    opacity: .7;
+    transition: all .3s ease-in;
+    cursor: pointer;
+    .color-indicator {
+      height: 100%;
+      aspect-ratio: 1;
+      background: yellow;
+      border-radius: 50%;
+      border: 1px solid white;
+    }
+    .text {
+      flex: 1;
+      text-align: center;
+      text-transform: uppercase;
+      text-align: left;
+      padding-left: 30px;
+    }
+    &.selected {
+      opacity: 1;
+      background: white;
+      color: black;
+    }
+  }
+}
+
 .hero {
   height: 100svh;
   width: 100%;
@@ -128,5 +176,13 @@ canvas {
         }
       }
     }
+  }
+}
+
+
+@media (max-width:500px) {
+  .selectors {
+    width: 200px;
+    bottom: 10px;
   }
 }
